@@ -61,21 +61,59 @@ function render(lista) {
   });
 }
 
-render(pokemonLocal);   // ¡píntalo!
+function adaptarPokemon(data) {
+  return {
+    nombre: data.name,
+    imagen: data.sprites?.front_default ?? "https://via.placeholder.com/96?text=?",
+    tipos: data.types.map(function (t) {
+      return t.type.name;
+    })
+  };
+}
 
-//  Logro 02
-const nuevo = {
-  nombre: "mew",
-  imagen: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png",
-  tipos: ["psychic"]
-};
-const ampliada = [...pokemonLocal, nuevo];
-render(ampliada);
+const nombres = ["bulbasaur", "charmander", "squirtle", "pikachu", "jigglypuff", "gengar", "ditto", "eevee", "snorlax"];
+
+let pokedex = [];
+
+// Estado de carga
+contenedor.innerHTML = `
+  <div class="col-span-full flex justify-center items-center py-10 text-slate-500">
+    <svg class="animate-spin h-8 w-8 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>
+    <span class="ml-3">Cargando…</span>
+  </div>
+`;
+const promesas = nombres.map(function (nombre) {
+  return fetch(`https://pokeapi.co/api/v2/pokemon/${nombre}`)
+    .then(function (r) {
+      return r.json();
+    });
+});
+
+Promise.all(promesas)
+  .then(function (datos) {
+    pokedex = datos.map(adaptarPokemon);
+    render(pokedex);
+  })
+  .catch(function () {
+    contenedor.innerHTML =
+      `<p class="col-span-full text-center text-red-600">No se pudo cargar la Pokédex.</p>`;
+  });
+
+
 
 const buscador = document.getElementById("buscador");
 
 buscador.addEventListener("input", function () {
   const texto = buscador.value.toLowerCase();
-  const filtrados = ampliada.filter(p => p.nombre.includes(texto));
-  render(filtrados);   // ← el MISMO render, con datos distintos
+
+  const filtrados = pokedex.filter(function (p) {
+    return p.nombre.includes(texto);
+  });
+
+  render(filtrados);
 });
+
+
