@@ -19,6 +19,15 @@ const coloresTipo = {
 };
 
 const contenedor = document.getElementById("resultado");
+const buscador = document.getElementById("buscador");
+const boton = document.getElementById("btn-buscar");
+const botonCargarMas = document.getElementById("cargar-mas");
+
+botonCargarMas.addEventListener("click", cargarMas);
+
+let pokedex = [];
+let offset = 0;
+
 
 function crearTarjeta(pokemon) {
   const { nombre, imagen, tipos } = pokemon;
@@ -53,6 +62,8 @@ function crearTarjeta(pokemon) {
   return articulo;
 }
 
+
+
 function render(lista) {
   contenedor.innerHTML = "";                 // 1. limpia lo anterior
   lista.forEach(function (pokemon) {
@@ -65,15 +76,100 @@ function adaptarPokemon(data) {
   return {
     nombre: data.name,
     imagen: data.sprites?.front_default ?? "https://via.placeholder.com/96?text=?",
-    tipos: data.types.map(function (t) {
-      return t.type.name;
+    tipos: data.types.map(t => t.type.name),
+
+    stats: data.stats.map(function (s) {
+      return {
+        nombre: s.stat.name,
+        valor: s.base_stat
+      };
     })
   };
 }
 
-const nombres = ["bulbasaur", "charmander", "squirtle", "pikachu", "jigglypuff", "gengar", "ditto", "eevee", "snorlax"];
+async function obtenerPokemon(idONombre) {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${idONombre}`);
+  return response.json();
+}
 
-let pokedex = [];
+async function buscarPokemon(nombre) {
+  const data = await obtenerPokemon(nombre.toLowerCase());
+  return adaptarPokemon(data);
+}
+
+function mostrarResultado(pokemon) {
+  const tarjeta = crearTarjeta(pokemon);
+
+  // STATS
+  const stats = document.createElement("div");
+  stats.className = "mt-2 text-left";
+
+  if (pokemon.stats) {
+    stats.innerHTML = pokemon.stats.map(s => `
+      <div class="flex justify-between text-xs">
+        <span>${s.nombre}</span>
+        <span>${s.valor}</span>
+      </div>
+    `).join("");
+  }
+
+  tarjeta.appendChild(stats);
+
+  // BOTÓN CAPTURAR
+  const botonCapturar = document.createElement("button");
+  botonCapturar.textContent = "⚡ Capturar";
+  botonCapturar.className =
+    "mt-2 w-full bg-yellow-400 font-semibold rounded-lg py-1 hover:bg-yellow-500";
+
+  botonCapturar.addEventListener("click", function () {
+    capturar(pokemon);
+  });
+
+  tarjeta.appendChild(botonCapturar);
+
+  // MOSTRAR EN PANTALLA
+  contenedor.innerHTML = "";
+  contenedor.appendChild(tarjeta);
+}
+
+
+async function mostrarBusqueda(nombre) {
+  const pokemon = await buscarPokemon(nombre);
+  mostrarResultado(pokemon);
+}
+
+function capturar(pokemon) {
+  if (!pokedex.some(p => p.nombre === pokemon.nombre)) {
+    pokedex.push(pokemon);
+  }
+
+  render(pokedex);
+}
+
+
+async function cargarMas() {
+  const res = await fetch(
+    `https://pokeapi.co/api/v2/pokemon?limit=12&offset=${offset}`
+  );
+
+  const data = await res.json();
+
+  const detalles = await Promise.all(
+    data.results.map(p => fetch(p.url).then(r => r.json()))
+  );
+
+  const nuevos = detalles.map(adaptarPokemon);
+
+  nuevos.forEach(p => {
+    if (!pokedex.some(x => x.nombre === p.nombre)) {
+      pokedex.push(p);
+    }
+  });
+
+  offset += 12;
+
+  render(pokedex);
+}
 
 // Estado de carga
 contenedor.innerHTML = `
@@ -85,35 +181,42 @@ contenedor.innerHTML = `
     <span class="ml-3">Cargando…</span>
   </div>
 `;
-const promesas = nombres.map(function (nombre) {
-  return fetch(`https://pokeapi.co/api/v2/pokemon/${nombre}`)
-    .then(function (r) {
-      return r.json();
-    });
+
+async function cargarPokedex() {
+  const nombres = [
+    "bulbasaur",
+    "charmander",
+    "squirtle",
+    "pikachu",
+    "jigglypuff",
+    "gengar"
+  ];
+
+  const datos = await Promise.all(
+    nombres.map(obtenerPokemon)
+  );
+
+  pokedex = datos.map(adaptarPokemon);
+
+  render(pokedex);
+}
+
+
+
+
+boton.addEventListener("click", () => {
+  const nombre = buscador.value.trim();
+
+  if (nombre !== "") {
+    mostrarBusqueda(nombre); 
+  }
 });
 
-Promise.all(promesas)
-  .then(function (datos) {
-    pokedex = datos.map(adaptarPokemon);
-    render(pokedex);
-  })
-  .catch(function () {
-    contenedor.innerHTML =
-      `<p class="col-span-full text-center text-red-600">No se pudo cargar la Pokédex.</p>`;
-  });
-
-
-
-const buscador = document.getElementById("buscador");
-
-buscador.addEventListener("input", function () {
-  const texto = buscador.value.toLowerCase();
-
-  const filtrados = pokedex.filter(function (p) {
-    return p.nombre.includes(texto);
-  });
-
-  render(filtrados);
+// ENTER = buscar también
+buscador.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    boton.click();
+  }
 });
 
-
+cargarPokedex();
