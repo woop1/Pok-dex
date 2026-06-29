@@ -43,6 +43,17 @@ const contador = document.getElementById("contador-capturados");
 const musica = document.getElementById("musica");
 const volumen = document.getElementById("volumen");
 
+// 🎵 INICIAR MÚSICA SOLO CON INTERACCIÓN
+window.addEventListener("click", iniciarMusica, { once: true });
+window.addEventListener("keydown", iniciarMusica, { once: true });
+
+function iniciarMusica() {
+  musica.volume = volumen.value || 0.5;
+
+  musica.play().catch(err => {
+    console.log("No se pudo reproducir audio:", err);
+  });
+}
 
 
 // ===============================
