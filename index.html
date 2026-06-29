@@ -5,38 +5,103 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pokédex</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🎬 FONDO GIF -->
+  <style>
+    body {
+      background-image: url("img/36sr31w5cqud1.gif");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* 🃏 CARTAS POKÉMON MEJORADAS */
+    .pokemon-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      background: rgba(248, 250, 252, 0.9); /* slate-50/90 */
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .pokemon-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+    }
+  </style>
+
 </head>
 
-<body class="bg-gradient-to-br from-slate-100 via-white to-slate-200 min-h-screen p-6">
+<body class="min-h-screen p-6">
 
-  <h1 class="text-4xl font-extrabold text-center text-slate-800 mb-6 tracking-wide">
-    Pokédex
-  </h1>
+  <!-- 🎵 MÚSICA -->
+  <audio id="musica" autoplay loop>
+    <source src="snd/Chill & Relaxing Pokémon Music Mix.mp3" type="audio/mp3">
+  </audio>
 
-  <!-- BUSCADOR -->
+  <!-- 🔊 VOLUMEN -->
+  <div class="fixed bottom-4 left-4 bg-white p-3 rounded-lg shadow flex items-center gap-2 z-50">
+    <span>🔊</span>
+    <input id="volumen" type="range" min="0" max="1" step="0.01" value="0.5">
+  </div>
+
+  <!-- 🎒 POKEBOLA -->
+  <div class="fixed top-4 left-4 z-50">
+    <img
+      id="pokebola-btn"
+      src="img/pokeball.png"
+      class="w-12 h-12 cursor-pointer"
+    >
+
+    <span id="contador-capturados"
+      class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-2">
+      0
+    </span>
+  </div>
+
+  <!-- 🎒 INVENTARIO -->
+  <div id="inventario"
+    class="hidden fixed top-16 left-4 w-[420px] bg-white/90 backdrop-blur-md shadow-xl rounded-lg p-3 z-50 flex">
+
+    <div class="w-1/2 pr-2 border-r">
+      <h3 class="font-bold mb-2">🎒 Capturados</h3>
+      <div id="lista-inventario" class="space-y-2 max-h-64 overflow-auto"></div>
+    </div>
+
+    <div class="w-1/2 pl-2">
+      <h3 class="font-bold mb-2">📊 Stats</h3>
+      <div id="panel-inventario-contenido" class="text-sm text-slate-700">
+        Selecciona un Pokémon
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 🔎 BUSCADOR -->
   <div class="max-w-md mx-auto flex gap-2 mb-6">
-    <input id="buscador" type="text" placeholder="Busca un Pokémon (ej. charizard)"
-      class="flex-1 p-2 rounded-lg border border-slate-300">
-
-    <button id="btn-buscar"
-      class="px-4 py-2 bg-yellow-400 font-semibold rounded-lg hover:bg-yellow-500">
+    <input id="buscador" class="flex-1 p-2 border rounded-lg">
+    <button id="btn-buscar" class="bg-yellow-400 px-4 py-2 rounded-lg">
       Buscar
     </button>
   </div>
 
-  <!-- RESULTADOS / REJILLA -->
-  <div id="resultado"
-    class="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-  </div>
+  <!-- 📊 ESTADOS -->
+  <div id="spinner" class="hidden text-center">Cargando…</div>
+  <div id="mensaje" class="hidden text-center text-red-600"></div>
 
-  <!-- BOTÓN CARGAR MÁS (IMPORTANTE) -->
+  <!-- 🧾 RESULTADOS -->
+  <div id="resultado"
+    class="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto"></div>
+
+  <!-- ➕ CARGAR MÁS -->
   <div class="text-center my-6">
     <button id="cargar-mas"
-      class="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800">
+      class="bg-slate-700 text-white px-4 py-2 rounded-lg">
       Cargar más
     </button>
   </div>
 
   <script src="app.js"></script>
+
 </body>
 </html>
